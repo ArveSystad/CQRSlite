@@ -20,38 +20,38 @@ namespace CQRSCode.WriteModel.Handlers
             _session = session;
         }
 
-        public async Task Handle(CreateInventoryItem message)
+        public async Task Handle(CreateInventoryItem command)
         {
-            var item = new InventoryItem(message.Id, message.Name);
+            var item = new InventoryItem(command.Id, command.Name);
             await _session.Add(item);
             await _session.Commit();
         }
 
-        public async Task Handle(DeactivateInventoryItem message, CancellationToken token)
+        public async Task Handle(DeactivateInventoryItem command, CancellationToken token)
         {
-            var item = await _session.Get<InventoryItem>(message.Id, message.ExpectedVersion, token);
+            var item = await _session.Get<InventoryItem>(command.Id, command.ExpectedVersion, token);
             item.Deactivate();
             await _session.Commit(token);
         }
 
-        public async Task Handle(RemoveItemsFromInventory message, CancellationToken token)
+        public async Task Handle(RemoveItemsFromInventory command, CancellationToken token)
         {
-            var item = await _session.Get<InventoryItem>(message.Id, message.ExpectedVersion, token);
-            item.Remove(message.Count);
+            var item = await _session.Get<InventoryItem>(command.Id, command.ExpectedVersion, token);
+            item.Remove(command.Count);
             await _session.Commit(token);
         }
 
-        public async Task Handle(CheckInItemsToInventory message, CancellationToken token)
+        public async Task Handle(CheckInItemsToInventory command, CancellationToken token)
         {
-            var item = await _session.Get<InventoryItem>(message.Id, message.ExpectedVersion, token);
-            item.CheckIn(message.Count);
+            var item = await _session.Get<InventoryItem>(command.Id, command.ExpectedVersion, token);
+            item.CheckIn(command.Count);
             await _session.Commit(token);
         }
 
-        public async Task Handle(RenameInventoryItem message, CancellationToken token)
+        public async Task Handle(RenameInventoryItem command, CancellationToken token)
         {
-            var item = await _session.Get<InventoryItem>(message.Id, message.ExpectedVersion, token);
-            item.ChangeName(message.NewName);
+            var item = await _session.Get<InventoryItem>(command.Id, command.ExpectedVersion, token);
+            item.ChangeName(command.NewName);
             await _session.Commit(token);
         }
     }

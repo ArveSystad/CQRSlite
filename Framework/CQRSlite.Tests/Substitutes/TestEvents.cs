@@ -11,7 +11,6 @@ namespace CQRSlite.Tests.Substitutes
         public Guid Id { get; set; }
         public int Version { get; set; }
         public DateTimeOffset TimeStamp { get; set; }
-        public bool LongRunning { get; set; }
     }
 
     internal class TestAggregateDidSomethingInternal : IEvent
@@ -29,13 +28,32 @@ namespace CQRSlite.Tests.Substitutes
         public DateTimeOffset TimeStamp { get; set; }
     }
 
-    public class TestAggregateDidSomethingHandler : ICancellableEventHandler<TestAggregateDidSomething>,
-        IEventHandler<TestAggregateDidSomethingElse>
+    public class TestAggregateDidSomethingHandler : IEventHandler<TestAggregateDidSomethingElse>
     {
         public async Task Handle(TestAggregateDidSomething message, CancellationToken token)
         {
-            if (message.LongRunning)
-                await Task.Delay(50, token);
+            lock (message)
+            {
+                if (message.Version == -10)
+                    throw new ConcurrencyException(message.Id);
+                TimesRun++;
+            }
+        }
+
+        public Task Handle(TestAggregateDidSomethingElse message)
+        {
+            TimesRun++;
+            return Task.CompletedTask;
+        }
+
+
+        public int TimesRun { get; private set; }
+    }
+    
+    public class TestAggregateDidSomethingCancellableHandler : ICancellableEventHandler<TestAggregateDidSomething>
+    {
+        public async Task Handle(TestAggregateDidSomething message, CancellationToken token)
+        {
             lock (message)
             {
                 if (message.Version == -10)

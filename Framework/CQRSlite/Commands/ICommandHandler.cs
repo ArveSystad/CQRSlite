@@ -1,12 +1,13 @@
-using CQRSlite.Messages;
+using System.Threading.Tasks;
 
 namespace CQRSlite.Commands
 {
     /// <summary>
     /// Defines a handler for a command.
     /// </summary>
-    /// <typeparam name="T">Event type being handled</typeparam>
-    public interface ICommandHandler<in T> : IHandler<T> where T : ICommand
+    /// <typeparam name="T">Command being handled</typeparam>
+    public interface ICommandHandler<in T> where T : ICommand
     {
+        Task Handle(T command);
     }
 }

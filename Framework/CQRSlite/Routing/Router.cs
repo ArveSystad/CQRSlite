@@ -1,62 +1,68 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using CQRSlite.Commands;
 using CQRSlite.Events;
 using CQRSlite.Messages;
-using CQRSlite.Queries;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CQRSlite.Routing
 {
     /// <summary>
     /// Default router implementation for sending commands and publishing events.
     /// </summary>
-    public class Router : ICommandSender, IEventPublisher, IQueryProcessor, IHandlerRegistrar
+    public class Router : ICommandSender, IEventPublisher
     {
-        private readonly Dictionary<Type, List<Func<IMessage, CancellationToken, Task>>> _routes = new Dictionary<Type, List<Func<IMessage, CancellationToken, Task>>>();
+        private readonly IServiceProvider _serviceProvider;
 
-        public void RegisterHandler<T>(Func<T, CancellationToken, Task> handler) where T : class, IMessage
+        public Router(IServiceProvider serviceProvider)
         {
-            if (!_routes.TryGetValue(typeof(T), out var handlers))
+            _serviceProvider = serviceProvider;
+        }
+        
+        public async Task Send<T>(T command, CancellationToken cancellationToken = default) where T : class, ICommand
+        {
+            var handlerType = typeof(ICommandHandler<>).MakeGenericType(command.GetType());
+
+            using (var scope = _serviceProvider.CreateScope())
             {
-                handlers = new List<Func<IMessage, CancellationToken, Task>>();
-                _routes.Add(typeof(T), handlers);
+                var commandHandler = scope.ServiceProvider.GetService(handlerType);
+
+                if (commandHandler == null)
+                {
+                    var cancellableHandlerType = typeof(ICancellableCommandHandler<>).MakeGenericType(command.GetType());
+                    commandHandler = scope.ServiceProvider.GetService(cancellableHandlerType);
+                }
+                
+                if(commandHandler == null)
+                    throw new InvalidOperationException($"No handler registered for {handlerType.FullName}");
+                
+                var task = (Task)handlerType.InvokeMember(nameof(ICancellableCommandHandler<ICommand>.Handle), BindingFlags.Instance | BindingFlags.Public | BindingFlags.InvokeMethod, null, commandHandler, new object[] { command, cancellationToken });
+                await task;    
             }
-            handlers.Add((message, token) => handler((T)message, token));
         }
 
-        public Task Send<T>(T command, CancellationToken cancellationToken = default) where T : class, ICommand
+        public async Task Publish<T>(T @event, CancellationToken cancellationToken = default) where T : class, IEvent
         {
-            var type = command.GetType();
-            if (!_routes.TryGetValue(type, out var handlers))
-                throw new InvalidOperationException($"No handler registered for {type.FullName}");
-            if (handlers.Count != 1)
-                throw new InvalidOperationException($"Cannot send to more than one handler of {type.FullName}");
-            return handlers[0](command, cancellationToken);
-        }
+            var handlerType = typeof(IHandler<>).MakeGenericType(@event.GetType());
+            var cancellablehandlerType = typeof(IHandler<>).MakeGenericType(@event.GetType());
 
-        public Task Publish<T>(T @event, CancellationToken cancellationToken = default) where T : class, IEvent
-        {
-            if (!_routes.TryGetValue(@event.GetType(), out var handlers))
-                return Task.FromResult(0);
-
-            var tasks = new Task[handlers.Count];
-            for (var index = 0; index < handlers.Count; index++)
+            using (var scope = _serviceProvider.CreateScope())
             {
-                tasks[index] = handlers[index](@event, cancellationToken);
-            }
-            return Task.WhenAll(tasks);
-        }
+                var handlers = scope.ServiceProvider.GetServices(handlerType).ToList();
+                handlers.AddRange(scope.ServiceProvider.GetServices(cancellablehandlerType));
+                
+                if(handlers == null || !handlers.Any())
+                    throw new InvalidOperationException($"No handler registered for {handlerType.FullName}");
 
-        public Task<TResponse> Query<TResponse>(IQuery<TResponse> query, CancellationToken cancellationToken = default)
-        {
-            var type = query.GetType();
-            if (!_routes.TryGetValue(type, out var handlers))
-                throw new InvalidOperationException($"No handler registered for {type.FullName}");
-            if (handlers.Count != 1)
-                throw new InvalidOperationException($"Cannot query more than one handler of {type.FullName}");
-            return (Task<TResponse>)handlers[0](query, cancellationToken);
+                var tasks = handlers.Select(handler => 
+                    (Task)handlerType.InvokeMember(nameof(IHandler<IMessage>.Handle), BindingFlags.Instance | BindingFlags.Public | BindingFlags.InvokeMethod, null, handler, new object[] { @event, cancellationToken })
+                );
+                await Task.WhenAll(tasks);
+            }
         }
     }
 }

@@ -5,9 +5,7 @@ using System.Threading.Tasks;
 using CQRSCode.ReadModel.Dtos;
 using CQRSCode.ReadModel.Events;
 using CQRSCode.ReadModel.Infrastructure;
-using CQRSCode.ReadModel.Queries;
 using CQRSlite.Events;
-using CQRSlite.Queries;
 
 namespace CQRSCode.ReadModel.Handlers
 {
@@ -16,7 +14,6 @@ namespace CQRSCode.ReadModel.Handlers
         ICancellableEventHandler<InventoryItemRenamed>,
         ICancellableEventHandler<ItemsRemovedFromInventory>,
         ICancellableEventHandler<ItemsCheckedInToInventory>,
-        ICancellableQueryHandler<GetInventoryItemDetails, InventoryItemDetailsDto>
     {
         public Task Handle(InventoryItemCreated message, CancellationToken token)
         {

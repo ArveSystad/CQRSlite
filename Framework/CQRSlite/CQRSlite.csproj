@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+    <TargetFramework>net7.0</TargetFramework>
     <Description>A lightweight framework to help write CQRS and Eventsourcing applications in C#</Description>
     <Copyright>Copyright Gaute Magnussen</Copyright>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -16,7 +16,6 @@
     <IsPackable>true</IsPackable>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <BaselineAllAPICompatError>true</BaselineAllAPICompatError>
-    <AdditionalApiCompatOptions>--exclude-non-browsable --exclude-compiler-generated</AdditionalApiCompatOptions>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageIcon>logo.png</PackageIcon>
     <authors>Gaute Magnussen</authors>
@@ -29,21 +28,13 @@
     <None Include="../../assets/logo.png" Pack="true" PackagePath="logo.png" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-  </ItemGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0' ">
+  
+  <ItemGroup>
+    <PackageReference Include="Scrutor" Version="4.2.2" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.0" />
-  </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
   </ItemGroup>
 </Project>

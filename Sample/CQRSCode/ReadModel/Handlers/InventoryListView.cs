@@ -4,16 +4,13 @@ using System.Threading.Tasks;
 using CQRSCode.ReadModel.Dtos;
 using CQRSCode.ReadModel.Events;
 using CQRSCode.ReadModel.Infrastructure;
-using CQRSCode.ReadModel.Queries;
 using CQRSlite.Events;
-using CQRSlite.Queries;
 
 namespace CQRSCode.ReadModel.Handlers
 {
 	public class InventoryListView : ICancellableEventHandler<InventoryItemCreated>,
 	    ICancellableEventHandler<InventoryItemRenamed>,
-	    ICancellableEventHandler<InventoryItemDeactivated>,
-	    ICancellableQueryHandler<GetInventoryItems, List<InventoryItemListDto>>
+	    ICancellableEventHandler<InventoryItemDeactivated>
     {
         public Task Handle(InventoryItemCreated message, CancellationToken token)
         {

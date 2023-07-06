@@ -23,12 +23,12 @@ namespace CQRSlite.Tests.Substitutes
 
     public class TestAggregateDoSomethingHandler : ICancellableCommandHandler<TestAggregateDoSomething>
     {
-        public async Task Handle(TestAggregateDoSomething message, CancellationToken token)
+        public async Task Handle(TestAggregateDoSomething command, CancellationToken token)
         {
-            if (message.LongRunning)
+            if (command.LongRunning)
                 await Task.Delay(50, token);
-            if(message.ExpectedVersion != TimesRun)
-                throw new ConcurrencyException(message.Id);
+            if(command.ExpectedVersion != TimesRun)
+                throw new ConcurrencyException(command.Id);
             TimesRun++;
             Token = token;
         }
@@ -39,7 +39,7 @@ namespace CQRSlite.Tests.Substitutes
     }
 	public class TestAggregateDoSomethingElseHandler : AbstractTestAggregateDoSomethingElseHandler
     {
-        public override Task Handle(TestAggregateDoSomethingElse message)
+        public override Task Handle(TestAggregateDoSomethingElse command)
         {
             TimesRun++;
             return Task.CompletedTask;
@@ -50,7 +50,7 @@ namespace CQRSlite.Tests.Substitutes
 
     public abstract class AbstractTestAggregateDoSomethingElseHandler : ICommandHandler<TestAggregateDoSomethingElse>
     {
-        public abstract Task Handle(TestAggregateDoSomethingElse message);
+        public abstract Task Handle(TestAggregateDoSomethingElse command);
     }
 
     public class TestAggregateDoSomethingHandlerExplicit : ICommandHandler<TestAggregateDoSomething>
@@ -66,13 +66,13 @@ namespace CQRSlite.Tests.Substitutes
     public class TestAggregateDoSomethingHandlerExplicit2 : ICommandHandler<TestAggregateDoSomething>
     {
         public int TimesRun { get; set; }
-        Task IHandler<TestAggregateDoSomething>.Handle(TestAggregateDoSomething message)
+        Task IHandler<TestAggregateDoSomething>.Handle(TestAggregateDoSomething command)
         {
             TimesRun++;
             return Task.CompletedTask;
         }
 
-        public Task Handle(TestAggregateDoSomething message)
+        public Task Handle(TestAggregateDoSomething command)
         {
             throw new NotImplementedException();
         }

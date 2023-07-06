@@ -9,7 +9,7 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Scrutor" Version="3.3.0" />
+    <PackageReference Include="Scrutor" Version="4.2.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Framework\CQRSlite\CQRSlite.csproj" />
